@@ -16,6 +16,8 @@ GOOS=linux GOARCH=amd64 go build -o nextcloud-exporter .
 | `-url` | `NEXTCLOUD_URL` | Nextcloud base URL | (required) |
 | `-token` | `NC_TOKEN` | NC-Token header value | (required) |
 | `-listen` | `LISTEN_ADDR` | Listen address | `:9205` |
+| `-fetch-interval` | `FETCH_INTERVAL` | Minimum interval between API fetches | `10s` |
+| `-timeout` | `TIMEOUT` | HTTP client timeout | `10s` |
 
 ## Usage
 
@@ -25,11 +27,22 @@ GOOS=linux GOARCH=amd64 go build -o nextcloud-exporter .
   -url "https://your-nextcloud.com" \
   -token "your-token"
 
+# With custom fetch interval (to avoid 429 rate limiting)
+./nextcloud-exporter \
+  -url "https://your-nextcloud.com" \
+  -token "your-token" \
+  -fetch-interval 15s
+
 # Using environment variables
 export NEXTCLOUD_URL="https://your-nextcloud.com"
 export NC_TOKEN="your-token"
+export FETCH_INTERVAL=15s
 ./nextcloud-exporter
 ```
+
+## Rate Limiting
+
+The exporter caches API responses for the duration of `fetch-interval` to prevent 429 (Too Many Requests) errors from Nextcloud. If Prometheus scrapes faster than this interval, cached data is returned. If a fetch fails but cached data exists, the exporter returns cached data with a warning log.
 
 ## Metrics
 
